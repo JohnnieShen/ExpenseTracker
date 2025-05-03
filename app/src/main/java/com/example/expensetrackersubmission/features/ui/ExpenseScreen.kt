@@ -71,7 +71,7 @@ fun ExpenseScreen(
         ExpenseList(
             items = filtered,
             contentPadding = padding,
-            onDelete = { vm.onIntent(ExpenseIntent.DeleteClicked(it)) },
+            onAskDelete = { vm.onIntent(ExpenseIntent.AskDelete(it)) },
             onLongPress = { vm.onIntent(ExpenseIntent.DeleteClicked(it)) },
             onTap = { vm.onIntent(ExpenseIntent.EditClicked(it)) }
         )
@@ -84,6 +84,29 @@ fun ExpenseScreen(
             onDismiss = { vm.onIntent(ExpenseIntent.DismissAdd) },
             onSaveNew = { vm.onIntent(it) },
             onSaveEdit = { vm.onIntent(it) }
+        )
+    }
+    if (uiState.pendingDelete != null) {
+        val exp = uiState.pendingDelete
+        AlertDialog(
+            onDismissRequest = { vm.onIntent(ExpenseIntent.CancelDelete) },
+            title = { Text("Delete expense") },
+            text = {
+                if (exp != null) {
+                    Text("Are you sure you want to delete “${exp.label}” ?")
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = { exp?.let { ExpenseIntent.ConfirmDelete(it) }
+                        ?.let { vm.onIntent(it) } }
+                ) { Text("Delete") }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { vm.onIntent(ExpenseIntent.CancelDelete) }
+                ) { Text("Cancel") }
+            }
         )
     }
 }
@@ -144,7 +167,7 @@ private fun TotalHeader(
 private fun ExpenseList(
     items: List<ExpenseUiModel>,
     contentPadding: PaddingValues,
-    onDelete: (ExpenseUiModel) -> Unit,
+    onAskDelete: (ExpenseUiModel) -> Unit,
     onLongPress: (ExpenseUiModel) -> Unit,
     onTap: (ExpenseUiModel) -> Unit
 ) {
@@ -153,7 +176,7 @@ private fun ExpenseList(
         contentPadding = contentPadding
     ) {
         items(items, key = { it.id }) { expense ->
-            ExpenseRow(item = expense, onDelete = onDelete, onLongPress = onLongPress, onTap = onTap)
+            ExpenseRow(item = expense, onAskDelete = onAskDelete, onLongPress = onLongPress, onTap = onTap)
         }
     }
 }

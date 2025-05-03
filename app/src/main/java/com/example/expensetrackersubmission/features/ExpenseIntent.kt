@@ -20,4 +20,8 @@ sealed class ExpenseIntent {
     data class FilterByCategory(val category: Category?) : ExpenseIntent()
 
     data class DeleteClicked(val expense: ExpenseUiModel) : ExpenseIntent()
+
+    data class AskDelete(val expense: ExpenseUiModel) : ExpenseIntent()
+    object  CancelDelete : ExpenseIntent()
+    data class ConfirmDelete(val expense: ExpenseUiModel): ExpenseIntent()
 }

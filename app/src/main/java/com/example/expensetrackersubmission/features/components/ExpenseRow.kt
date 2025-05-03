@@ -19,7 +19,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun ExpenseRow(
     item: ExpenseUiModel,
-    onDelete: (ExpenseUiModel) -> Unit,
+    onAskDelete: (ExpenseUiModel) -> Unit,
     onTap: (ExpenseUiModel) -> Unit,
     onLongPress: (ExpenseUiModel) -> Unit
 ) {
@@ -29,7 +29,7 @@ fun ExpenseRow(
             .fillMaxWidth()
             .pointerInput(Unit) {
                 detectTapGestures(
-                    onLongPress = { onLongPress(item) },
+                    onLongPress = { onAskDelete(item) },
                     onTap = { onTap(item) }
                 )
             }
@@ -45,7 +45,7 @@ fun ExpenseRow(
         Row {
             Text("$%.2f".format(item.amount), style = MaterialTheme.typography.titleMedium)
             Spacer(Modifier.width(8.dp))
-            IconButton(onClick = { onDelete(item) }) {
+            IconButton(onClick = { onAskDelete(item) }) {
                 Icon(Icons.Default.Delete, contentDescription = "Delete")
             }
         }

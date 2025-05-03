@@ -8,5 +8,6 @@ data class ExpenseState(
     val selectedCategory: Category? = null,
     val editing: ExpenseUiModel? = null,
     val showSheet: Boolean = false,
+    val pendingDelete: ExpenseUiModel? = null,
     val errorMessage: String? = null
 )

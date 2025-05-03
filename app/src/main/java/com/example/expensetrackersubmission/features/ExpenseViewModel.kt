@@ -77,6 +77,17 @@ class ExpenseViewModel @Inject constructor(
             deleteExpense(intent.expense.toDomain())
         }
 
+        is ExpenseIntent.AskDelete ->
+            _state.update { it.copy(pendingDelete = intent.expense) }
+
+        ExpenseIntent.CancelDelete ->
+            _state.update { it.copy(pendingDelete = null) }
+
+        is ExpenseIntent.ConfirmDelete -> viewModelScope.launch {
+            deleteExpense(intent.expense.toDomain())
+            _state.update { it.copy(pendingDelete = null) }
+        }
+
     }
 
     private fun Expense.toUi() =
