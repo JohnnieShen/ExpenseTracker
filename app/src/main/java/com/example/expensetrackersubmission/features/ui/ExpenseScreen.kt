@@ -12,6 +12,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.BeyondBoundsLayout
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.expensetrackersubmission.domain.Category
@@ -173,10 +176,11 @@ private fun ExpenseList(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = contentPadding
+        contentPadding = contentPadding.add(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(items, key = { it.id }) { expense ->
-            ExpenseRow(item = expense, onAskDelete = onAskDelete, onLongPress = onLongPress, onTap = onTap)
+            ExpenseRow(item = expense, onAskDelete = onAskDelete, onTap = onTap)
         }
     }
 }
@@ -221,4 +225,11 @@ private fun CategoryFilterDropdown(
         }
     }
 }
+
+private fun PaddingValues.add(extra: Dp): PaddingValues = PaddingValues(
+    start = calculateStartPadding(LayoutDirection.Ltr) + extra,
+    top = calculateTopPadding() + extra,
+    end = calculateEndPadding(LayoutDirection.Ltr) + extra,
+    bottom = calculateBottomPadding() + extra
+)
 
