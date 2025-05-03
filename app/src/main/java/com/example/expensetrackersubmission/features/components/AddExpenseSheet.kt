@@ -9,23 +9,32 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import com.example.expensetrackersubmission.domain.Category
 import com.example.expensetrackersubmission.features.ExpenseIntent
+import com.example.expensetrackersubmission.features.ExpenseUiModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddExpenseSheet(
-    onSave: (ExpenseIntent.SaveExpense) -> Unit,
+    initial: ExpenseUiModel?,
+    error: String?,
     onDismiss: () -> Unit,
-    error: String?
+    onSaveNew: (ExpenseIntent.SaveExpense) -> Unit,
+    onSaveEdit: (ExpenseIntent.SaveEdit) -> Unit
 ) {
-    var label by remember { mutableStateOf("") }
-    var amount by remember { mutableStateOf("") }
-    var selected by remember { mutableStateOf(Category.Food) }
+    var label by remember { mutableStateOf(initial?.label ?: "") }
+    var amount  by remember { mutableStateOf(
+        initial?.amount?.toString() ?: "") }
+    var selected by remember { mutableStateOf(
+        initial?.category ?: Category.Food) }
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(Modifier.padding(24.dp)) {
-            Text("Add Expense", style = MaterialTheme.typography.headlineSmall)
+            //Title
+            Text(
+                text = if (initial == null) "Add Expense" else "Edit Expense",
+                style = MaterialTheme.typography.headlineSmall
+            )
             Spacer(Modifier.height(16.dp))
-
+            //Label field
             OutlinedTextField(
                 value = label,
                 onValueChange = { label = it },
@@ -35,7 +44,7 @@ fun AddExpenseSheet(
             )
 
             Spacer(Modifier.height(8.dp))
-
+            //Amount field
             OutlinedTextField(
                 value = amount,
                 onValueChange = { amount = it },
@@ -46,7 +55,7 @@ fun AddExpenseSheet(
             )
 
             Spacer(Modifier.height(16.dp))
-
+            //Category enum
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Category.entries.forEach { cat ->
                     FilterChip(
@@ -63,17 +72,21 @@ fun AddExpenseSheet(
             }
 
             Spacer(Modifier.height(24.dp))
-
+            //Button at the end of the row in the last row
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 TextButton(onClick = onDismiss) { Text("Cancel") }
                 Spacer(Modifier.width(8.dp))
                 Button(
                     onClick = {
-                        onSave(
-                            ExpenseIntent.SaveExpense(label, amount, selected)
-                        )
+                        if (initial == null) {
+                            onSaveNew(ExpenseIntent.SaveExpense(label, amount, selected))
+                        } else {
+                            onSaveEdit(
+                                ExpenseIntent.SaveEdit(initial.id, label, amount, selected)
+                            )
+                        }
                     }
-                ) { Text("Save") }
+                ) { Text(if (initial == null) "Save" else "Update") }
             }
         }
     }

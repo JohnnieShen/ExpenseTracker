@@ -20,3 +20,10 @@ class DeleteExpense @Inject constructor(
 ) {
     suspend operator fun invoke(expense: Expense) = repo.delete(expense)
 }
+
+class UpdateExpense @Inject constructor(
+    private val repo: ExpenseRepository
+) {
+    suspend operator fun invoke(expense: Expense) = repo.update(expense)
+}
+

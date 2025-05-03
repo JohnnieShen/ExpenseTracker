@@ -6,6 +6,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -18,6 +21,7 @@ import com.example.expensetrackersubmission.features.components.AddExpenseSheet
 import com.example.expensetrackersubmission.features.components.ExpenseRow
 import com.example.expensetrackersubmission.features.ExpenseViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExpenseScreen(
     vm: ExpenseViewModel = hiltViewModel()
@@ -32,7 +36,32 @@ fun ExpenseScreen(
     val total = remember(filtered) { filtered.sumOf { it.amount } }
 
     Scaffold(
-        topBar = { TotalHeader(total, uiState.selectedCategory) { vm.onIntent(it) } },
+        topBar = {
+            //Using TopAppBar instead of built in implementation to avoid off center placement
+            TopAppBar(
+                title = {
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                    ) {
+                        Text(
+                            text = "Total: $%.2f".format(total),
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                },
+                actions = {
+                    CategoryFilterDropdown(
+                        selected = uiState.selectedCategory,
+                        onFilterChanged = { intent -> vm.onIntent(intent) }
+                    )
+                }
+            )
+        },
         floatingActionButton = {
             FloatingActionButton(onClick = { vm.onIntent(ExpenseIntent.AddClicked) }) {
                 Icon(Icons.Default.Add, contentDescription = "Add expense")
@@ -42,19 +71,24 @@ fun ExpenseScreen(
         ExpenseList(
             items = filtered,
             contentPadding = padding,
-            onLongPress = { vm.onIntent(ExpenseIntent.DeleteClicked(it)) }
+            onDelete = { vm.onIntent(ExpenseIntent.DeleteClicked(it)) },
+            onLongPress = { vm.onIntent(ExpenseIntent.DeleteClicked(it)) },
+            onTap = { vm.onIntent(ExpenseIntent.EditClicked(it)) }
         )
     }
 
-    if (uiState.showAddSheet) {
+    if (uiState.showSheet) {
         AddExpenseSheet(
-            onSave   = { vm.onIntent(it) },
+            initial = uiState.editing,
+            error   = uiState.errorMessage,
             onDismiss = { vm.onIntent(ExpenseIntent.DismissAdd) },
-            error     = uiState.errorMessage
+            onSaveNew = { vm.onIntent(it) },
+            onSaveEdit = { vm.onIntent(it) }
         )
     }
 }
 
+//OLD VERSION, DOESN'T WORK WELL IN CERTAIN RESOLUTIONS
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TotalHeader(
@@ -110,14 +144,58 @@ private fun TotalHeader(
 private fun ExpenseList(
     items: List<ExpenseUiModel>,
     contentPadding: PaddingValues,
-    onLongPress: (ExpenseUiModel) -> Unit
+    onDelete: (ExpenseUiModel) -> Unit,
+    onLongPress: (ExpenseUiModel) -> Unit,
+    onTap: (ExpenseUiModel) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = contentPadding
     ) {
         items(items, key = { it.id }) { expense ->
-            ExpenseRow(item = expense, onLongPress = onLongPress)
+            ExpenseRow(item = expense, onDelete = onDelete, onLongPress = onLongPress, onTap = onTap)
         }
     }
 }
+
+@Composable
+private fun CategoryFilterDropdown(
+    selected: Category?,
+    onFilterChanged: (ExpenseIntent.FilterByCategory) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val label = selected?.name ?: "All"
+
+    Box(modifier = modifier) {
+        TextButton(onClick = { expanded = true }) {
+            Text(label)
+            Icon(
+                Icons.Default.ArrowDropDown,
+                contentDescription = "Filter expenses by category"
+            )
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            DropdownMenuItem(
+                text = { Text("All") },
+                onClick = {
+                    expanded = false
+                    onFilterChanged(ExpenseIntent.FilterByCategory(null))
+                }
+            )
+            Category.entries.forEach { cat ->
+                DropdownMenuItem(
+                    text = { Text(cat.name) },
+                    onClick = {
+                        expanded = false
+                        onFilterChanged(ExpenseIntent.FilterByCategory(cat))
+                    }
+                )
+            }
+        }
+    }
+}
+

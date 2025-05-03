@@ -9,10 +9,12 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import javax.inject.Inject
 
+//MVI pattern
 @HiltViewModel
 class ExpenseViewModel @Inject constructor(
     private val observeExpenses: ObserveExpenses,
     private val addExpense: AddExpense,
+    private val updateExpense: UpdateExpense,
     private val deleteExpense: DeleteExpense
 ) : ViewModel() {
 
@@ -30,24 +32,38 @@ class ExpenseViewModel @Inject constructor(
     }
 
     fun onIntent(intent: ExpenseIntent) = when (intent) {
-        ExpenseIntent.AddClicked -> _state.update { it.copy(showAddSheet = true, errorMessage = null) }
-        ExpenseIntent.DismissAdd -> _state.update { it.copy(showAddSheet = false, errorMessage = null) }
+        ExpenseIntent.AddClicked -> _state.update { it.copy(showSheet = true, editing = null, errorMessage = null) }
+        is ExpenseIntent.EditClicked -> _state.update { it.copy(showSheet = true, editing = intent.expense, errorMessage = null) }
+        ExpenseIntent.DismissAdd -> _state.update { it.copy(showSheet = false, errorMessage = null) }
 
         is ExpenseIntent.SaveExpense -> viewModelScope.launch {
-            val amountVal = intent.amount.toDoubleOrNull()
-            if (intent.label.isBlank() || amountVal == null) {
+            val amount = intent.amount.toDoubleOrNull()
+            if (intent.label.isBlank() || amount == null) {
                 _state.update { it.copy(errorMessage = "Enter valid label & amount") }
                 return@launch
             }
             addExpense(
-                Expense(
-                    label = intent.label.trim(),
-                    amount = amountVal,
-                    category = intent.category,
-                    date = LocalDate.now()
-                )
+                Expense(label = intent.label.trim(),
+                    amount = amount,
+                    category = intent.category)
             )
-            _state.update { it.copy(showAddSheet = false, errorMessage = null) }
+            _state.update { it.copy(showSheet = false) }
+        }
+
+        is ExpenseIntent.SaveEdit -> viewModelScope.launch {
+            val amount = intent.amount.toDoubleOrNull()
+            if (intent.label.isBlank() || amount == null) {
+                _state.update { it.copy(errorMessage = "Enter valid label & amount") }
+                return@launch
+            }
+            updateExpense(
+                Expense(id = intent.id,
+                    label = intent.label.trim(),
+                    amount = amount,
+                    category = intent.category,
+                    date = LocalDate.now())
+            )
+            _state.update { it.copy(showSheet = false) }
         }
 
         is ExpenseIntent.DeleteClicked -> viewModelScope.launch {
@@ -60,6 +76,7 @@ class ExpenseViewModel @Inject constructor(
         is ExpenseIntent.DeleteClicked -> viewModelScope.launch {
             deleteExpense(intent.expense.toDomain())
         }
+
     }
 
     private fun Expense.toUi() =

@@ -20,7 +20,8 @@ class ExpenseViewModelTest {
 
     private val repo = mockk<ExpenseRepository>(relaxed = true)
     private val observe = ObserveExpenses(repo)
-    private val add     = AddExpense(repo)
+    private val add = AddExpense(repo)
+    private val update = UpdateExpense(repo)
     private val delete  = DeleteExpense(repo)
     private val dispatcher = StandardTestDispatcher()
 
@@ -31,7 +32,7 @@ class ExpenseViewModelTest {
         every { repo.observe() } returns emptyFlow()
 
         val vm = com.example.expensetrackersubmission.features.ExpenseViewModel(
-            observe, add, delete
+            observe, add, update, delete
         )
 
         vm.state.test {

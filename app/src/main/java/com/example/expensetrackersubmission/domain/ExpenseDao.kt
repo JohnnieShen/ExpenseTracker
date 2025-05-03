@@ -11,4 +11,5 @@ interface ExpenseDao {
 
     @Insert suspend fun insert(entity: ExpenseEntity)
     @Delete suspend fun delete(entity: ExpenseEntity)
+    @Update suspend fun update(entity: ExpenseEntity)
 }

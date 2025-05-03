@@ -6,4 +6,5 @@ interface ExpenseRepository {
     fun observe(): Flow<List<Expense>>
     suspend fun add(expense: Expense)
     suspend fun delete(expense: Expense)
+    suspend fun update(expense: Expense)
 }

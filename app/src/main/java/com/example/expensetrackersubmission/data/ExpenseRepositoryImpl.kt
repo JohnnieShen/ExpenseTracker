@@ -24,6 +24,9 @@ class ExpenseRepositoryImpl @Inject constructor(
     override suspend fun delete(expense: Expense) =
         dao.delete(expense.toEntity())
 
+    override suspend fun update(expense: Expense) =
+        dao.update(expense.toEntity())
+
     private fun ExpenseEntity.toDomain() = Expense(
         id, label, amount, Category.valueOf(category), date
     )

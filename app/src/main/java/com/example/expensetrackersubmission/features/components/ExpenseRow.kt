@@ -8,6 +8,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
@@ -18,6 +19,8 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun ExpenseRow(
     item: ExpenseUiModel,
+    onDelete: (ExpenseUiModel) -> Unit,
+    onTap: (ExpenseUiModel) -> Unit,
     onLongPress: (ExpenseUiModel) -> Unit
 ) {
     val formatter = DateTimeFormatter.ofPattern("MMM d")
@@ -25,7 +28,10 @@ fun ExpenseRow(
         modifier = Modifier
             .fillMaxWidth()
             .pointerInput(Unit) {
-                detectTapGestures(onLongPress = { onLongPress(item) })
+                detectTapGestures(
+                    onLongPress = { onLongPress(item) },
+                    onTap = { onTap(item) }
+                )
             }
             .background(MaterialTheme.colorScheme.surfaceVariant)
             .padding(16.dp),
@@ -39,7 +45,9 @@ fun ExpenseRow(
         Row {
             Text("$%.2f".format(item.amount), style = MaterialTheme.typography.titleMedium)
             Spacer(Modifier.width(8.dp))
-            Icon(Icons.Default.Delete, contentDescription = null)
+            IconButton(onClick = { onDelete(item) }) {
+                Icon(Icons.Default.Delete, contentDescription = "Delete")
+            }
         }
     }
 }
